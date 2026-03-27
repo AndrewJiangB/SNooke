@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Multiplayer Snake</title>
+  <style>
+    body { margin: 0; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial; }
+    canvas { border: 2px solid #fff; background: #000; }
+    #info { position: absolute; top: 10px; left: 10px; color: white; }
+  </style>
+</head>
+<body>
+  <div id="info">
+    <div>Use arrow keys to control your snake</div>
+    <div id="status">Connecting...</div>
+  </div>
+  <canvas id="board" width="400" height="400"></canvas>
+  <script src="client.js"></script>
+</body>
+</html>
