@@ -1,5 +1,7 @@
-const snake = require('./snake');
-const blackjack = require('./blackjack');
+const snake = require('./snake/snake');
+const blackjack = require('./blackjack/blackjack');
+const snakeHandler = require('./snake/handler');
+const blackjackHandler = require('./blackjack/handler');
 
 const clientData = new Map();
 const gameClients = { snake: new Set(), blackjack: new Set() };
@@ -47,17 +49,10 @@ function handleGameAction(ws, msg) {
 
   switch (client.game) {
     case 'snake':
-      if (msg.type === 'input' && msg.dir) {
-        snake.handleInput(client.playerId, msg.dir);
-      } else if (msg.type === 'respawn') {
-        snake.respawnPlayer(client.playerId);
-      }
+      snakeHandler.handleGameAction(client.playerId, msg);
       break;
     case 'blackjack':
-      if (msg.type !== 'action') return;
-      if (msg.action === 'bet') blackjack.placeBet(client.playerId, msg.amount);
-      if (msg.action === 'hit') blackjack.hit(client.playerId);
-      if (msg.action === 'stand') blackjack.stand(client.playerId);
+      blackjackHandler.handleGameAction(client.playerId, msg);
       break;
   }
 }
