@@ -4,19 +4,45 @@
   <title>Multiplayer Games</title>
   <style>
     body { margin: 0; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial; color: white; }
-    #selection { display: flex; flex-direction: column; align-items: center; }
+    #lobby, #selection { display: none; flex-direction: column; align-items: center; }
+    #lobby.active, #selection.active { display: flex; }
+    #username-input { padding: 10px; margin-bottom: 10px; width: 250px; border-radius: 6px; border: 1px solid #555; background: #111; color: #fff; }
+    #color-preview { margin-bottom: 20px; }
+    #color-swatch { display: inline-block; width: 18px; height: 18px; border-radius: 50%; vertical-align: middle; margin-left: 8px; border: 1px solid #fff; }
     #game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; width: 90vw; max-width: 800px; }
     .game-card { background: #333; padding: 20px; border-radius: 10px; cursor: pointer; text-align: center; transition: background 0.3s; }
     .game-card:hover { background: #444; }
     #game { display: none; flex-direction: column; align-items: center; width: 90vw; max-width: 800px; }
+    #game-header { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 15px; background: #1a1a1a; border-bottom: 2px solid #444; margin-bottom: 15px; border-radius: 8px; }
+    #player-info { display: flex; align-items: center; gap: 12px; }
+    #player-name { font-size: 18px; font-weight: bold; }
+    #player-color { display: inline-block; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; }
+    #back-btn { padding: 8px 16px; background: #444; border: 1px solid #666; border-radius: 6px; cursor: pointer; color: white; transition: background 0.3s; }
+    #back-btn:hover { background: #555; }
     #info { margin-bottom: 10px; }
     #blackjack-ui { display: none; width: 100%; color: #fff; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
     th, td { border: 1px solid #666; padding: 6px; text-align: left; }
     button { margin-right: 5px; padding: 8px 12px; }
+    #snake-ui { display: flex; gap: 20px; align-items: flex-start; }
+    #snake-leaderboard { background: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 15px; min-width: 200px; }
+    #snake-leaderboard h3 { margin-top: 0; margin-bottom: 10px; }
+    .snake-leaderboard-entry { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 4px; margin-bottom: 8px; background: #222; }
+    .snake-leaderboard-entry:last-child { margin-bottom: 0; }
+    .snake-score-color { width: 16px; height: 16px; border-radius: 50%; border: 1px solid #fff; }
+    .snake-score-info { flex: 1; display: flex; justify-content: space-between; align-items: center; }
+    .snake-score-name { font-weight: bold; }
+    .snake-score-length { font-weight: bold; }
   </style>
 </head>
 <body>
+  <div id="lobby" class="active">
+    <h1>Join the Lobby</h1>
+    <input id="username-input" type="text" placeholder="Enter your username" maxlength="20" />
+    <div id="color-preview">Assigned color: <span id="color-swatch"></span></div>
+    <button id="join-btn">Enter Game Lobby</button>
+  </div>
+
   <div id="selection">
     <h1>Select a Game</h1>
     <div id="game-grid">
@@ -32,10 +58,25 @@
   </div>
 
   <div id="game">
+    <div id="game-header">
+      <div id="player-info">
+        <span id="player-color"></span>
+        <span id="player-name">Player</span>
+      </div>
+      <button id="back-btn">← Back to Selection</button>
+    </div>
     <div id="info"><div id="status">Connecting...</div></div>
 
     <div id="snake-ui">
       <canvas id="board" width="400" height="400"></canvas>
+      <div id="snake-leaderboard">
+        <h3>Leaderboard</h3>
+        <div id="snake-leaderboard-entries"></div>
+        <div id="respawn-container" style="display: none; margin-top: 15px; text-align: center;">
+          <p style="margin: 0 0 10px 0; color: #ff6b6b; font-weight: bold;">You died!</p>
+          <button id="respawn-btn" style="padding: 10px 20px; background: #4a90e2; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold;">Respawn</button>
+        </div>
+      </div>
     </div>
 
     <div id="blackjack-ui">

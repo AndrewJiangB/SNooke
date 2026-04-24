@@ -119,14 +119,15 @@ function resolveRound() {
   }
 }
 
-function initPlayer(playerId, name) {
+function initPlayer(playerId, name, color) {
+  const playerData = { name, bankroll: STARTING_BANKROLL, bet: 0, hand: [], status: 'betting', color };
   if (phase !== 'waiting' && phase !== 'betting') {
     // round active, queue for next round
-    queuedPlayers.push({ playerId, player: { name, bankroll: STARTING_BANKROLL, bet: 0, hand: [], status: 'waiting' } });
+    queuedPlayers.push({ playerId, player: { ...playerData, status: 'waiting' } });
     return { queued: true };
   }
 
-  players.set(playerId, { name, bankroll: STARTING_BANKROLL, bet: 0, hand: [], status: 'betting' });
+  players.set(playerId, playerData);
   if (phase === 'waiting') phase = 'betting';
   return { queued: false };
 }

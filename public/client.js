@@ -1,13 +1,23 @@
+const lobbyEl = document.getElementById('lobby');
+const usernameInput = document.getElementById('username-input');
+const colorSwatch = document.getElementById('color-swatch');
+const joinBtn = document.getElementById('join-btn');
 const selectionEl = document.getElementById('selection');
 const gameEl = document.getElementById('game');
+const playerNameEl = document.getElementById('player-name');
+const playerColorEl = document.getElementById('player-color');
+const backBtn = document.getElementById('back-btn');
 const snakeUi = document.getElementById('snake-ui');
 const blackjackUi = document.getElementById('blackjack-ui');
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
+const snakeLeaderboardEntries = document.getElementById('snake-leaderboard-entries');
 const statusEl = document.getElementById('status');
 const blackjackStatusEl = document.getElementById('blackjack-status');
 const playersTable = document.getElementById('players-table');
 const dealerHandEl = document.getElementById('dealer-hand');
+const respawnContainer = document.getElementById('respawn-container');
+const respawnBtn = document.getElementById('respawn-btn');
 const TILE_SIZE = 20;
 const BOARD_SIZE = 20;
 
@@ -15,13 +25,91 @@ let myId = null;
 let state = { players: [] };
 let ws;
 let currentGame = null;
+let username = '';
+let userColor = '';
+
+function generateColor() {
+  const hue = Math.floor(Math.random() * 360);
+  return `hsl(${hue}, 70%, 50%)`;
+}
+
+function updateColorSwatch() {
+  colorSwatch.style.backgroundColor = userColor;
+  colorSwatch.textContent = '';
+}
+
+function showLobby() {
+  lobbyEl.classList.add('active');
+  selectionEl.classList.remove('active');
+  gameEl.style.display = 'none';
+}
+
+function showSelection() {
+  lobbyEl.classList.remove('active');
+  selectionEl.classList.add('active');
+  gameEl.style.display = 'none';
+}
+
+function showGame() {
+  selectionEl.classList.remove('active');
+  gameEl.style.display = 'flex';
+  // Update header with player name and color
+  playerNameEl.textContent = username;
+  playerColorEl.style.backgroundColor = userColor;
+}
+
+backBtn.addEventListener('click', () => {
+  // Close websocket connection
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.close();
+  }
+  // Reset game state
+  myId = null;
+  state = { players: [] };
+  currentGame = null;
+  
+  // Clear UI elements
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  playersTable.innerHTML = '';
+  statusEl.textContent = 'Connecting...';
+  blackjackStatusEl.textContent = '';
+  dealerHandEl.textContent = '';
+  snakeUi.style.display = 'none';
+  blackjackUi.style.display = 'none';
+  
+  // Return to selection
+  showSelection();
+});
+
+usernameInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    joinBtn.click();
+  }
+});
+
+userColor = generateColor();
+updateColorSwatch();
+showLobby();
+
+joinBtn.addEventListener('click', () => {
+  const name = usernameInput.value.trim();
+  if (!name) {
+    usernameInput.focus();
+    return;
+  }
+
+  username = name;
+  userColor = generateColor();
+  updateColorSwatch();
+  showSelection();
+});
 
 document.querySelectorAll('.game-card').forEach(card => {
   card.addEventListener('click', () => {
     const game = card.dataset.game;
     currentGame = game;
-    selectionEl.style.display = 'none';
-    gameEl.style.display = 'flex';
+    showGame();
 
     if (game === 'snake') {
       snakeUi.style.display = 'block';
@@ -39,27 +127,34 @@ function startSocket() {
   ws = new WebSocket(`ws://${window.location.host}`);
 
   ws.onopen = () => {
+    const joinPayload = {
+      type: 'join',
+      game: currentGame,
+      name: username,
+      color: userColor
+    };
+
     if (currentGame === 'snake') {
       statusEl.textContent = 'Connected to Snake! Use arrows.';
-      ws.send(JSON.stringify({ type: 'join', game: 'snake' }));
     } else if (currentGame === 'blackjack') {
       statusEl.textContent = 'Connected to Blackjack!';
-      ws.send(JSON.stringify({ type: 'join', game: 'blackjack' }));
     }
+
+    ws.send(JSON.stringify(joinPayload));
   };
 
   ws.onmessage = (event) => {
     const msg = JSON.parse(event.data);
     if (msg.type === 'state') {
       state = msg;
-      if (!myId && state.players.length > 0) {
-        myId = state.players[0].id;
-      }
       draw();
     } else if (msg.type === 'blackjack_state') {
       state = msg;
       renderBlackjack();
     } else if (msg.type === 'joined') {
+      if (msg.playerId) {
+        myId = msg.playerId;
+      }
       if (msg.game === 'blackjack' && msg.queued) {
         blackjackStatusEl.textContent = 'Round in progress; you are queued until next round.';
       }
@@ -124,6 +219,33 @@ function draw() {
       ctx.lineWidth = 1;
     }
   });
+
+  renderSnakeLeaderboard();
+}
+
+function renderSnakeLeaderboard() {
+  if (!state.players) return;
+
+  // Sort players by score (snake length) descending
+  const sorted = [...state.players].sort((a, b) => b.snake.length - a.snake.length);
+
+  snakeLeaderboardEntries.innerHTML = sorted.map(player => `
+    <div class="snake-leaderboard-entry">
+      <div class="snake-score-color" style="background-color: ${player.color};"></div>
+      <div class="snake-score-info">
+        <span class="snake-score-name">${player.name}</span>
+        <span class="snake-score-length">${player.snake.length}</span>
+      </div>
+    </div>
+  `).join('');
+
+  // Check if current player is dead and show respawn button
+  const myPlayer = state.players.find(p => p.id === myId);
+  if (myPlayer && !myPlayer.alive) {
+    respawnContainer.style.display = 'block';
+  } else {
+    respawnContainer.style.display = 'none';
+  }
 }
 
 function renderBlackjack() {
@@ -132,8 +254,9 @@ function renderBlackjack() {
 
   state.players.forEach((player) => {
     const tr = document.createElement('tr');
+    const colorBadge = `<span style="display:inline-block;width:14px;height:14px;background:${player.color || '#999'};border-radius:50%;margin-right:6px;vertical-align:middle;"></span>`;
     tr.innerHTML = `
-      <td>${player.name}${player.id === myId ? ' (You)' : ''}</td>
+      <td>${colorBadge}${player.name}${player.id === myId ? ' (You)' : ''}</td>
       <td>${player.bankroll}</td>
       <td>${player.bet}</td>
       <td>${player.hand.map(c => c.v + c.s).join(', ')}</td>
@@ -145,6 +268,12 @@ function renderBlackjack() {
 
   dealerHandEl.textContent = state.dealerHand.map(c => c.v + c.s).join(', ');
 }
+
+respawnBtn.addEventListener('click', () => {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'respawn' }));
+  }
+});
 
 const directions = {
   ArrowUp: { dx: 0, dy: -1 },

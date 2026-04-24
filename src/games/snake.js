@@ -3,14 +3,14 @@ const BOARD_SIZE = 20;
 let food = { x: Math.floor(Math.random() * BOARD_SIZE), y: Math.floor(Math.random() * BOARD_SIZE) };
 let players = new Map(); // playerId -> { name, snake: [{x,y}], dir: {dx,dy}, alive: true, color }
 
-function initPlayer(playerId) {
-  const hue = Math.floor(Math.random() * 360);
+function initPlayer(playerId, name, color) {
+  const startingColor = color || `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`;
   players.set(playerId, {
-    name: `Player ${players.size + 1}`,
+    name: name || `Player ${players.size + 1}`,
     snake: [{ x: Math.floor(Math.random() * BOARD_SIZE), y: Math.floor(Math.random() * BOARD_SIZE) }],
     dir: { dx: 1, dy: 0 },
     alive: true,
-    color: `hsl(${hue}, 70%, 50%)`
+    color: startingColor
   });
 }
 
@@ -25,6 +25,16 @@ function handleInput(playerId, dir) {
     if (dir.dx !== -player.dir.dx || dir.dy !== -player.dir.dy) {
       player.dir = dir;
     }
+  }
+}
+
+function respawnPlayer(playerId) {
+  const player = players.get(playerId);
+  if (player && !player.alive) {
+    // Reset player to starting position
+    player.snake = [{ x: Math.floor(Math.random() * BOARD_SIZE), y: Math.floor(Math.random() * BOARD_SIZE) }];
+    player.dir = { dx: 1, dy: 0 };
+    player.alive = true;
   }
 }
 
@@ -79,4 +89,4 @@ function updateGame() {
   };
 }
 
-module.exports = { initPlayer, removePlayer, handleInput, updateGame };
+module.exports = { initPlayer, removePlayer, handleInput, respawnPlayer, updateGame };

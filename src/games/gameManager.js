@@ -16,6 +16,9 @@ function joinGame(ws, msg) {
     return;
   }
 
+  if (msg.name) client.name = msg.name;
+  if (msg.color) client.color = msg.color;
+
   if (client.game && gameClients[client.game].has(ws)) {
     console.log(`Player ${client.playerId} switching from ${client.game} to ${game}`);
     gameClients[client.game].delete(ws);
@@ -28,11 +31,11 @@ function joinGame(ws, msg) {
 
   switch (game) {
     case 'snake':
-      snake.initPlayer(client.playerId);
-      ws.send(JSON.stringify({ type: 'joined', game: 'snake' }));
+      snake.initPlayer(client.playerId, client.name || msg.name || `Player ${client.playerId}`, client.color || msg.color);
+      ws.send(JSON.stringify({ type: 'joined', game: 'snake', playerId: client.playerId }));
       break;
     case 'blackjack':
-      const result = blackjack.initPlayer(client.playerId, msg.name || `Player ${client.playerId}`);
+      const result = blackjack.initPlayer(client.playerId, client.name || msg.name || `Player ${client.playerId}`, client.color);
       ws.send(JSON.stringify({ type: 'joined', game: 'blackjack', queued: result.queued }));
       break;
   }
@@ -46,6 +49,8 @@ function handleGameAction(ws, msg) {
     case 'snake':
       if (msg.type === 'input' && msg.dir) {
         snake.handleInput(client.playerId, msg.dir);
+      } else if (msg.type === 'respawn') {
+        snake.respawnPlayer(client.playerId);
       }
       break;
     case 'blackjack':
@@ -81,7 +86,7 @@ function disconnectGame(ws) {
 
 function initConnection(ws) {
   const playerId = Date.now() + '-' + Math.random().toString(36).substr(2, 5);
-  clientData.set(ws, { playerId, game: null });
+  clientData.set(ws, { playerId, game: null, name: null, color: null });
   return playerId;
 }
 
