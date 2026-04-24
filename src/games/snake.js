@@ -76,8 +76,8 @@ function updateGame() {
   const allDead = Array.from(players.values()).every(p => !p.alive);
   if (allDead && players.size > 0) {
     // Reset game
-    players.clear();
-    food = { x: Math.floor(Math.random() * BOARD_SIZE), y: Math.floor(Math.random() * BOARD_SIZE) };
+    //players.clear();
+    //food = { x: Math.floor(Math.random() * BOARD_SIZE), y: Math.floor(Math.random() * BOARD_SIZE) };
   }
 
   // Return state
