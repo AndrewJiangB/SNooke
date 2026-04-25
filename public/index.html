@@ -82,13 +82,18 @@
     <div id="blackjack-ui">
       <div><strong>Blackjack</strong></div>
       <div id="blackjack-status"></div>
+      <div id="dealer-section" style="margin-bottom: 18px; padding: 14px; background: #181818; border: 2px solid #e0c36e; border-radius: 10px; text-align: center; font-size: 1.2em;">
+        <strong style="font-size: 1.3em; color: #ffe066; letter-spacing: 1px;">Dealer</strong><br>
+        <span id="dealer-hand"></span>
+        <span id="dealer-total" style="margin-left: 18px; font-weight: bold; color: #fff;"> </span>
+        <span id="deck-count" style="margin-left: 18px; color: #aaa; font-size: 0.95em;"></span>
+      </div>
       <table>
         <thead><tr><th>Player</th><th>Bankroll</th><th>Bet</th><th>Hand</th><th>Value</th><th>Status</th></tr></thead>
         <tbody id="players-table"></tbody>
       </table>
-      <div>Dealer: <span id="dealer-hand"></span></div>
       <div id="controls">
-        <div>Bet: <button data-bet="5">5</button><button data-bet="10">10</button><button data-bet="25">25</button><button data-bet="50">50</button><button data-bet="100">100</button></div>
+        <div>Bet: <button data-bet="5">5</button><button data-bet="10">10</button><button data-bet="25">25</button><button data-bet="50">50</button><button data-bet="100">100</button><button id="custom-bet-btn" data-bet="all">Custom</button></div>
         <div><button id="hit-btn">Hit</button><button id="stand-btn">Stand</button></div>
       </div>
     </div>

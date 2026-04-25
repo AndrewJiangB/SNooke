@@ -172,10 +172,23 @@ function startSnakeGame() {
 
 function startBlackjackGame() {
   startSocket();
+
   document.querySelectorAll('[data-bet]').forEach((btn) => {
     btn.onclick = () => {
-      const amount = Number(btn.dataset.bet);
-      if (ws && ws.readyState === WebSocket.OPEN) {
+      let amount;
+      if (btn.dataset.bet === 'all') {
+        // Prompt for custom bet amount
+        let custom = 0;
+        if (state && state.players && myId) {
+          const me = state.players.find(p => p.id === myId);
+          custom = me ? me.bankroll : 0;
+        }
+        custom = Number(prompt('Enter your custom bet amount:', custom || '100'));
+        amount = custom;
+      } else {
+        amount = Number(btn.dataset.bet);
+      }
+      if (ws && ws.readyState === WebSocket.OPEN && amount > 0) {
         ws.send(JSON.stringify({ type: 'action', action: 'bet', amount }));
       }
     };
@@ -252,6 +265,7 @@ function renderBlackjack() {
   blackjackStatusEl.textContent = `Phase: ${state.phase} | Current turn: ${state.currentPlayerId || '---'} | Queued: ${state.queued}`;
   playersTable.innerHTML = '';
 
+  // Render players
   state.players.forEach((player) => {
     const tr = document.createElement('tr');
     const colorBadge = `<span style="display:inline-block;width:14px;height:14px;background:${player.color || '#999'};border-radius:50%;margin-right:6px;vertical-align:middle;"></span>`;
@@ -266,7 +280,20 @@ function renderBlackjack() {
     playersTable.appendChild(tr);
   });
 
-  dealerHandEl.textContent = state.dealerHand.map(c => c.v + c.s).join(', ');
+  // Render dealer info
+  if (state.dealer) {
+    dealerHandEl.textContent = state.dealer.hand.map(c => c.v + c.s).join(', ');
+    const dealerTotalEl = document.getElementById('dealer-total');
+    const deckCountEl = document.getElementById('deck-count');
+    if (dealerTotalEl) dealerTotalEl.textContent = `Total: ${state.dealer.total}`;
+    if (deckCountEl) deckCountEl.textContent = `Deck: ${state.dealer.deckCount} cards left`;
+  } else {
+    dealerHandEl.textContent = '';
+    const dealerTotalEl = document.getElementById('dealer-total');
+    const deckCountEl = document.getElementById('deck-count');
+    if (dealerTotalEl) dealerTotalEl.textContent = '';
+    if (deckCountEl) deckCountEl.textContent = '';
+  }
 }
 
 respawnBtn.addEventListener('click', () => {

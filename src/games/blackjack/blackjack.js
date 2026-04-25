@@ -87,7 +87,9 @@ function resolveRound() {
 		const playerValue = handValue(p.hand);
 
 		if (p.status === 'bust') {
-			// lose
+			// Player busts: instantly lose bet
+			p.bankroll -= p.bet;
+			if (p.bankroll < 0) p.bankroll = 0;
 		} else if (dealerValue > 21 || playerValue > dealerValue) {
 			p.bankroll += p.bet;
 		} else if (playerValue === dealerValue) {
@@ -140,8 +142,9 @@ function removePlayer(playerId) {
 
 function placeBet(playerId, amount) {
 	const player = players.get(playerId);
-	if (!player || phase !== 'betting' || !BET_OPTIONS.includes(amount)) return false;
-	if (amount > player.bankroll) return false;
+	if (!player || phase !== 'betting') return false;
+	// Allow any custom bet up to bankroll
+	if (amount > player.bankroll || amount <= 0) return false;
 	player.bet = amount;
 	player.status = 'ready';
 
@@ -197,12 +200,19 @@ function updateGame() {
 	}
 
 	const publicDealer = phase === 'round_end' || phase === 'waiting' || phase === 'betting' ? dealerHand : [dealerHand[0], { v: '?', s: '' }];
+	const dealerTotal = (phase === 'round_end' || phase === 'waiting' || phase === 'betting') ? handValue(dealerHand) : handValue([dealerHand[0]]);
+	const deckCount = deck.length;
 
 	return {
 		type: 'blackjack_state',
 		phase,
+		// Dealer info is now at the top and more prominent
+		dealer: {
+			hand: publicDealer,
+			total: dealerTotal,
+			deckCount: deckCount,
+		},
 		players: Array.from(players.entries()).map(([id, p]) => ({ id, ...p })),
-		dealerHand: publicDealer,
 		currentPlayerId: currentPlayerIds[currentTurnIndex] || null,
 		betOptions: BET_OPTIONS,
 		queued: queuedPlayers.length,
