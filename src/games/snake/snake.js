@@ -45,80 +45,74 @@ function respawnPlayer(playerId) {
 	}
 }
 
+function toPositionKey(position) {
+	return `${position.x},${position.y}`;
+}
+
+function getWrappedHead(head, dir) {
+	return {
+		x: (head.x + dir.dx + BOARD_SIZE) % BOARD_SIZE,
+		y: (head.y + dir.dy + BOARD_SIZE) % BOARD_SIZE
+	};
+}
+
+function incrementPositionCount(map, position) {
+	const key = toPositionKey(position);
+	map.set(key, (map.get(key) || 0) + 1);
+}
 
 function updateGame() {
 	// Cycle food color
 	foodColorHue = (foodColorHue + 5) % 360;
-	// Move each player
-	   // Build a hashmap of all body positions (excluding heads) for O(1) collision checks
-	   const bodyMap = new Map(); // key: "x,y", value: playerId
-	   players.forEach((otherPlayer, otherId) => {
-		   if (!otherPlayer.alive) return;
-		   for (let i = 1; i < otherPlayer.snake.length; i++) { // skip head
-			   const segment = otherPlayer.snake[i];
-			   const key = `${segment.x},${segment.y}`;
-			   bodyMap.set(key, otherId);
-		   }
-	   });
+	const activeMoves = [];
+	const futureBodyCounts = new Map();
+	const nextHeadCounts = new Map();
+	let foodClaimed = false;
+	let nextFood = food;
 
-	   // Store heads for head-on collision check
-	   const headsMap = new Map(); // key: playerId, value: {x, y}
+	players.forEach((player, playerId) => {
+		if (!player.alive) return;
 
-	   players.forEach((player, playerId) => {
-		   if (!player.alive) return;
+		const moveDir = player.nextDir || player.dir;
+		const nextHead = getWrappedHead(player.snake[0], moveDir);
+		const willGrow = !foodClaimed && nextHead.x === food.x && nextHead.y === food.y;
 
-		   const moveDir = player.nextDir || player.dir;
-		   const head = { x: player.snake[0].x + moveDir.dx, y: player.snake[0].y + moveDir.dy };
-		   head.x = (head.x + BOARD_SIZE) % BOARD_SIZE;
-		   head.y = (head.y + BOARD_SIZE) % BOARD_SIZE;
+		if (willGrow) {
+			foodClaimed = true;
+			nextFood = {
+				x: Math.floor(Math.random() * BOARD_SIZE),
+				y: Math.floor(Math.random() * BOARD_SIZE)
+			};
+		}
 
-		   // Check self-collision
-		   if (player.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
-			   player.alive = false;
-		   }
+		activeMoves.push({ playerId, player, moveDir, nextHead, willGrow });
+		incrementPositionCount(nextHeadCounts, nextHead);
 
-		   // Check collision with other players' bodies (excluding heads)
-		   const key = `${head.x},${head.y}`;
-		   if (bodyMap.has(key)) {
-			   player.alive = false;
-		   }
+		const bodyEndIndex = willGrow ? player.snake.length : player.snake.length - 1;
+		for (let i = 0; i < bodyEndIndex; i++) {
+			incrementPositionCount(futureBodyCounts, player.snake[i]);
+		}
+	});
 
-		   // Store new head for head-on collision check
-		   headsMap.set(playerId, head);
-		   player._nextHead = head;
+	activeMoves.forEach(({ player, moveDir, nextHead, willGrow }) => {
+		const nextHeadKey = toPositionKey(nextHead);
+		const hitBody = (futureBodyCounts.get(nextHeadKey) || 0) > 0;
+		const hitHead = (nextHeadCounts.get(nextHeadKey) || 0) > 1;
 
-		   player.snake.unshift(head);
+		if (hitBody || hitHead) {
+			player.alive = false;
+		}
 
-		   // Eat food?
-		   if (head.x === food.x && head.y === food.y) {
-			   food = { x: Math.floor(Math.random() * BOARD_SIZE), y: Math.floor(Math.random() * BOARD_SIZE) };
-		   } else {
-			   player.snake.pop();
-		   }
+		player.snake.unshift(nextHead);
+		if (!willGrow) {
+			player.snake.pop();
+		}
 
-		   player.dir = moveDir;
-		   player.nextDir = moveDir;
-	   });
+		player.dir = moveDir;
+		player.nextDir = moveDir;
+	});
 
-	   // Efficient head-on collision check using headsMap
-	   const alivePlayerIds = Array.from(players.entries()).filter(([_, p]) => p.alive).map(([id]) => id);
-	   for (let i = 0; i < alivePlayerIds.length; i++) {
-		   const idA = alivePlayerIds[i];
-		   const pA = players.get(idA);
-		   const headA = headsMap.get(idA);
-		   for (let j = i + 1; j < alivePlayerIds.length; j++) {
-			   const idB = alivePlayerIds[j];
-			   const pB = players.get(idB);
-			   const headB = headsMap.get(idB);
-			   if (headA && headB && headA.x === headB.x && headA.y === headB.y) {
-				   pA.alive = false;
-				   pB.alive = false;
-			   }
-		   }
-	   }
-
-	   // Clean up temporary _nextHead property
-	   players.forEach((p) => { delete p._nextHead; });
+	food = nextFood;
 	
 	// Respawn dead players? For now, just mark dead
 	const allDead = Array.from(players.values()).every(p => !p.alive);
