@@ -219,4 +219,11 @@ function updateGame() {
 	};
 }
 
-module.exports = { initPlayer, removePlayer, placeBet, hit, stand, updateGame, resetRound };
+function handleGameAction(playerId, msg) {
+	if (msg.type !== 'action') return;
+	if (msg.action === 'bet') placeBet(playerId, msg.amount);
+	if (msg.action === 'hit') hit(playerId);
+	if (msg.action === 'stand') stand(playerId);
+}
+
+module.exports = { initPlayer, removePlayer, placeBet, hit, stand, updateGame, resetRound, handleGameAction };

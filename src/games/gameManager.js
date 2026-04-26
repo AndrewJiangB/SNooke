@@ -1,17 +1,17 @@
 const snake = require('./snake/snake');
 const blackjack = require('./blackjack/blackjack');
-const snakeHandler = require('./snake/handler');
-const blackjackHandler = require('./blackjack/handler');
+const pokerPlanning = require('./poker-planning/pokerPlanning');
+
 
 const clientData = new Map();
-const gameClients = { snake: new Set(), blackjack: new Set() };
+const gameClients = { snake: new Set(), blackjack: new Set(), pokerPlanning: new Set() };
 
 function joinGame(ws, msg) {
   const client = clientData.get(ws);
   if (!client) return;
 
   const game = msg.game;
-  if (!['snake', 'blackjack'].includes(game)) return;
+  if (!['snake', 'blackjack', 'pokerPlanning'].includes(game)) return;
 
   if (client.game === game) {
     console.log(`Player ${client.playerId} already in game ${game}`);
@@ -26,6 +26,7 @@ function joinGame(ws, msg) {
     gameClients[client.game].delete(ws);
     if (client.game === 'snake') snake.removePlayer(client.playerId);
     if (client.game === 'blackjack') blackjack.removePlayer(client.playerId);
+    if (client.game === 'pokerPlanning') pokerPlanning.removePlayer(client.playerId);
   }
 
   client.game = game;
@@ -40,6 +41,10 @@ function joinGame(ws, msg) {
       const result = blackjack.initPlayer(client.playerId, client.name || msg.name || `Player ${client.playerId}`, client.color);
       ws.send(JSON.stringify({ type: 'joined', game: 'blackjack', queued: result.queued }));
       break;
+    case 'pokerPlanning':
+      pokerPlanning.initPlayer(client.playerId, client.name || msg.name || `Player ${client.playerId}`, client.color);
+      ws.send(JSON.stringify({ type: 'joined', game: 'pokerPlanning', playerId: client.playerId }));
+      break;
   }
 }
 
@@ -49,10 +54,13 @@ function handleGameAction(ws, msg) {
 
   switch (client.game) {
     case 'snake':
-      snakeHandler.handleGameAction(client.playerId, msg);
+      snake.handleGameAction(client.playerId, msg);
       break;
     case 'blackjack':
-      blackjackHandler.handleGameAction(client.playerId, msg);
+      blackjack.handleGameAction(client.playerId, msg);
+      break;
+    case 'pokerPlanning':
+      pokerPlanning.handleGameAction(client.playerId, msg);
       break;
   }
 }
@@ -69,6 +77,9 @@ function disconnectGame(ws) {
       break;
     case 'blackjack':
       blackjack.removePlayer(playerId);
+      break;
+    case 'pokerPlanning':
+      pokerPlanning.removePlayer(playerId);
       break;
   }
 
@@ -88,9 +99,11 @@ function initConnection(ws) {
 function updateAllGames(broadcastToGame) {
   const snakeState = snake.updateGame();
   const blackjackState = blackjack.updateGame();
+  const pokerPlanningState = pokerPlanning.updateGame();
 
   broadcastToGame('snake', snakeState);
   broadcastToGame('blackjack', blackjackState);
+  broadcastToGame('pokerPlanning', pokerPlanningState);
 }
 
 module.exports = {

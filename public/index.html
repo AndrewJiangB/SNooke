@@ -21,6 +21,7 @@
     #back-btn:hover { background: #555; }
     #info { margin-bottom: 10px; }
     #blackjack-ui { display: none; width: 100%; color: #fff; }
+    #poker-planning-ui { display: none; width: 100%; color: #fff; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
     th, td { border: 1px solid #666; padding: 6px; text-align: left; }
     button { margin-right: 5px; padding: 8px 12px; }
@@ -33,6 +34,18 @@
     .snake-score-info { flex: 1; display: flex; justify-content: space-between; align-items: center; }
     .snake-score-name { font-weight: bold; }
     .snake-score-length { font-weight: bold; }
+    #planning-status { margin-bottom: 16px; color: #cfcfcf; }
+    #planning-players { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; width: 100%; margin-bottom: 22px; }
+    .planning-player-card { background: #1a1a1a; border: 2px solid #444; border-radius: 14px; padding: 14px; min-height: 160px; display: flex; flex-direction: column; }
+    .planning-player-name { font-weight: bold; margin-bottom: 12px; }
+    .planning-vote-box { flex: 1; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: #242424; font-size: 2rem; font-weight: bold; }
+    .planning-vote-box.pending { color: #8f8f8f; font-size: 1rem; }
+    .planning-meta { margin-top: 10px; color: #b8b8b8; font-size: 0.95rem; }
+    #planning-controls { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    #planning-card-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .planning-card-btn { min-width: 64px; padding: 12px 14px; border: 1px solid #666; border-radius: 10px; background: #2b2b2b; color: #fff; font-size: 1rem; cursor: pointer; }
+    .planning-card-btn.selected { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.2); }
+    #reveal-all-btn { padding: 12px 18px; border: 1px solid #888; border-radius: 10px; background: #3a3a3a; color: #fff; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -53,6 +66,10 @@
       <div class="game-card" data-game="blackjack">
         <h2>Blackjack</h2>
         <p>Multiplayer Casino Round</p>
+      </div>
+      <div class="game-card" data-game="pokerPlanning">
+        <h2>Poker Planning</h2>
+        <p>Estimate together, reveal at once</p>
       </div>
     </div>
   </div>
@@ -95,6 +112,16 @@
       <div id="controls">
         <div>Bet: <button data-bet="5">5</button><button data-bet="10">10</button><button data-bet="25">25</button><button data-bet="50">50</button><button data-bet="100">100</button><button id="custom-bet-btn" data-bet="all">Custom</button></div>
         <div><button id="hit-btn">Hit</button><button id="stand-btn">Stand</button></div>
+      </div>
+    </div>
+
+    <div id="poker-planning-ui">
+      <div><strong>Poker Planning</strong></div>
+      <div id="planning-status"></div>
+      <div id="planning-players"></div>
+      <div id="planning-controls">
+        <button id="reveal-all-btn">Reveal all</button>
+        <div id="planning-card-row"></div>
       </div>
     </div>
   </div>
