@@ -1,17 +1,18 @@
 const snake = require('./snake/snake');
 const blackjack = require('./blackjack/blackjack');
 const pokerPlanning = require('./poker-planning/pokerPlanning');
+const uno = require('./uno/uno');
 
 
 const clientData = new Map();
-const gameClients = { snake: new Set(), blackjack: new Set(), pokerPlanning: new Set() };
+const gameClients = { snake: new Set(), blackjack: new Set(), pokerPlanning: new Set(), uno: new Set() };
 
 function joinGame(ws, msg) {
   const client = clientData.get(ws);
   if (!client) return;
 
   const game = msg.game;
-  if (!['snake', 'blackjack', 'pokerPlanning'].includes(game)) return;
+  if (!['snake', 'blackjack', 'pokerPlanning', 'uno'].includes(game)) return;
 
   if (client.game === game) {
     console.log(`Player ${client.playerId} already in game ${game}`);
@@ -27,6 +28,7 @@ function joinGame(ws, msg) {
     if (client.game === 'snake') snake.removePlayer(client.playerId);
     if (client.game === 'blackjack') blackjack.removePlayer(client.playerId);
     if (client.game === 'pokerPlanning') pokerPlanning.removePlayer(client.playerId);
+    if (client.game === 'uno') uno.removePlayer(client.playerId);
   }
 
   client.game = game;
@@ -45,6 +47,10 @@ function joinGame(ws, msg) {
       pokerPlanning.initPlayer(client.playerId, client.name || msg.name || `Player ${client.playerId}`, client.color);
       ws.send(JSON.stringify({ type: 'joined', game: 'pokerPlanning', playerId: client.playerId }));
       break;
+    case 'uno':
+      uno.initPlayer(client.playerId, client.name || msg.name || `Player ${client.playerId}`, client.color);
+      ws.send(JSON.stringify({ type: 'joined', game: 'uno', playerId: client.playerId }));
+      break;
   }
 }
 
@@ -61,6 +67,9 @@ function handleGameAction(ws, msg) {
       break;
     case 'pokerPlanning':
       pokerPlanning.handleGameAction(client.playerId, msg);
+      break;
+    case 'uno':
+      uno.handleGameAction(client.playerId, msg);
       break;
   }
 }
@@ -81,6 +90,9 @@ function disconnectGame(ws) {
     case 'pokerPlanning':
       pokerPlanning.removePlayer(playerId);
       break;
+    case 'uno':
+      uno.removePlayer(playerId);
+      break;
   }
 
   if (game && gameClients[game]) {
@@ -100,10 +112,20 @@ function updateAllGames(broadcastToGame) {
   const snakeState = snake.updateGame();
   const blackjackState = blackjack.updateGame();
   const pokerPlanningState = pokerPlanning.updateGame();
+  uno.updateGame();
 
   broadcastToGame('snake', snakeState);
   broadcastToGame('blackjack', blackjackState);
   broadcastToGame('pokerPlanning', pokerPlanningState);
+
+  for (const ws of gameClients.uno) {
+    if (ws.readyState !== 1) continue;
+
+    const client = clientData.get(ws);
+    if (!client) continue;
+
+    ws.send(JSON.stringify(uno.getStateForPlayer(client.playerId)));
+  }
 }
 
 module.exports = {

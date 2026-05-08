@@ -9,8 +9,8 @@
     #username-input { padding: 10px; margin-bottom: 10px; width: 250px; border-radius: 6px; border: 1px solid #555; background: #111; color: #fff; }
     #color-preview { margin-bottom: 20px; }
     #color-swatch { display: inline-block; width: 18px; height: 18px; border-radius: 50%; vertical-align: middle; margin-left: 8px; border: 1px solid #fff; }
-    #game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; width: 90vw; max-width: 800px; }
-    .game-card { background: #333; padding: 20px; border-radius: 10px; cursor: pointer; text-align: center; transition: background 0.3s; }
+    #game-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 20px; width: min(90vw, 700px); }
+    .game-card { width: 220px; background: #333; padding: 20px; border-radius: 10px; cursor: pointer; text-align: center; transition: background 0.3s; box-sizing: border-box; }
     .game-card:hover { background: #444; }
     #game { display: none; flex-direction: column; align-items: center; width: 90vw; max-width: 800px; }
     #game-header { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 15px; background: #1a1a1a; border-bottom: 2px solid #444; margin-bottom: 15px; border-radius: 8px; }
@@ -46,6 +46,53 @@
     .planning-card-btn { min-width: 64px; padding: 12px 14px; border: 1px solid #666; border-radius: 10px; background: #2b2b2b; color: #fff; font-size: 1rem; cursor: pointer; }
     .planning-card-btn.selected { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.2); }
     #reveal-all-btn { padding: 12px 18px; border: 1px solid #888; border-radius: 10px; background: #3a3a3a; color: #fff; cursor: pointer; }
+    #uno-ui { display: none; width: 100%; }
+    #uno-layout { display: grid; grid-template-columns: minmax(220px, 260px) minmax(0, 1fr); gap: 20px; width: 100%; }
+    .uno-panel { background: #1a1a1a; border: 1px solid #444; border-radius: 12px; padding: 16px; }
+    #uno-status { margin-bottom: 12px; color: #d5d5d5; }
+    #uno-victory { display: none; margin-bottom: 16px; padding: 14px; border-radius: 12px; background: #2f5d36; font-size: 1.2rem; font-weight: bold; text-align: center; }
+    #uno-players { display: flex; flex-direction: column; gap: 10px; }
+    .uno-player-item { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: #242424; border: 1px solid transparent; }
+    .uno-player-item.active-turn { border-color: #ffe066; box-shadow: 0 0 0 2px rgba(255,224,102,0.18); }
+    .uno-player-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #fff; }
+    .uno-player-name { font-weight: bold; }
+    .uno-player-count { color: #d0d0d0; }
+    #uno-table { display: flex; flex-direction: column; gap: 16px; }
+    #uno-center-area { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+    .uno-stack { display: flex; flex-direction: column; gap: 8px; align-items: center; min-width: 130px; }
+    .uno-card-face, .uno-hand-card { width: 110px; height: 150px; border-radius: 16px; border: 3px solid rgba(255,255,255,0.35); color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; background: #555; position: relative; overflow: hidden; }
+    .uno-card-face.empty { background: #2c2c2c; color: #bbb; }
+    .uno-card-value { font-size: 1.1rem; text-align: center; padding: 10px; }
+    .uno-hand-card { cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .uno-hand-card.playable:hover { transform: translateY(-6px); box-shadow: 0 10px 20px rgba(0,0,0,0.25); }
+    .uno-hand-card:disabled { cursor: not-allowed; opacity: 0.55; }
+    .uno-hand-card.red, .uno-card-face.red { background: #c43c35; }
+    .uno-hand-card.yellow, .uno-card-face.yellow { background: #c99b15; }
+    .uno-hand-card.green, .uno-card-face.green { background: #2f8f49; }
+    .uno-hand-card.blue, .uno-card-face.blue { background: #2d6fc6; }
+    .uno-hand-card.wild, .uno-card-face.wild { background: linear-gradient(135deg, #c43c35 0 25%, #c99b15 25% 50%, #2f8f49 50% 75%, #2d6fc6 75% 100%); }
+    #uno-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    #uno-start-btn, #uno-draw-btn { margin-right: 0; padding: 10px 16px; border: 1px solid #888; border-radius: 10px; background: #353535; color: #fff; cursor: pointer; }
+    #uno-color-picker { display: none; flex-wrap: wrap; gap: 8px; }
+    .uno-color-btn { margin-right: 0; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.25); border-radius: 999px; color: #fff; cursor: pointer; }
+    .uno-color-btn[data-uno-color="red"] { background: #c43c35; }
+    .uno-color-btn[data-uno-color="yellow"] { background: #c99b15; }
+    .uno-color-btn[data-uno-color="green"] { background: #2f8f49; }
+    .uno-color-btn[data-uno-color="blue"] { background: #2d6fc6; }
+    #uno-hand { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 12px; width: 100%; }
+    #uno-hand .uno-hand-card { width: 100%; max-width: 110px; justify-self: start; }
+    @media (max-width: 760px) {
+      body { align-items: flex-start; min-height: 100vh; height: auto; padding: 20px 0; }
+      #game-grid { width: min(92vw, 480px); }
+      #uno-layout { grid-template-columns: 1fr; }
+      #snake-ui { flex-direction: column; }
+    }
+    @media (max-width: 520px) {
+      #game-grid { width: min(92vw, 220px); }
+      #game-header { flex-direction: column; gap: 12px; }
+      #uno-center-area { flex-direction: column; align-items: stretch; }
+      .uno-stack { align-items: flex-start; }
+    }
   </style>
 </head>
 <body>
@@ -70,6 +117,10 @@
       <div class="game-card" data-game="pokerPlanning">
         <h2>Poker Planning</h2>
         <p>Estimate together, reveal at once</p>
+      </div>
+      <div class="game-card" data-game="uno">
+        <h2>UNO</h2>
+        <p>Race to empty your hand</p>
       </div>
     </div>
   </div>
@@ -122,6 +173,46 @@
       <div id="planning-controls">
         <button id="reveal-all-btn">Reveal all</button>
         <div id="planning-card-row"></div>
+      </div>
+    </div>
+
+    <div id="uno-ui">
+      <div><strong>UNO</strong></div>
+      <div id="uno-status"></div>
+      <div id="uno-victory"></div>
+      <div id="uno-layout">
+        <div class="uno-panel">
+          <h3 style="margin-top: 0;">Players</h3>
+          <div id="uno-players"></div>
+        </div>
+        <div class="uno-panel" id="uno-table">
+          <div id="uno-center-area">
+            <div class="uno-stack">
+              <div style="font-weight: bold;">Discard</div>
+              <div id="uno-top-card"></div>
+              <div id="uno-current-color"></div>
+            </div>
+            <div class="uno-stack">
+              <div style="font-weight: bold;">Deck</div>
+              <div class="uno-card-face empty">Draw</div>
+              <div id="uno-draw-pile"></div>
+            </div>
+          </div>
+          <div id="uno-controls">
+            <button id="uno-start-btn">Start game</button>
+            <button id="uno-draw-btn">Draw card</button>
+            <div id="uno-color-picker">
+              <button class="uno-color-btn" data-uno-color="red">Red</button>
+              <button class="uno-color-btn" data-uno-color="yellow">Yellow</button>
+              <button class="uno-color-btn" data-uno-color="green">Green</button>
+              <button class="uno-color-btn" data-uno-color="blue">Blue</button>
+            </div>
+          </div>
+          <div>
+            <h3 style="margin: 0 0 12px 0;">Your Hand</h3>
+            <div id="uno-hand"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

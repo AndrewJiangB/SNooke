@@ -1,6 +1,7 @@
 import { createBlackjackClient } from './games/blackjackClient.js';
 import { createPokerPlanningClient } from './games/pokerPlanningClient.js';
 import { createSnakeClient } from './games/snakeClient.js';
+import { createUnoClient } from './games/unoClient.js';
 
 const lobbyEl = document.getElementById('lobby');
 const usernameInput = document.getElementById('username-input');
@@ -14,6 +15,7 @@ const backBtn = document.getElementById('back-btn');
 const snakeUi = document.getElementById('snake-ui');
 const blackjackUi = document.getElementById('blackjack-ui');
 const pokerPlanningUi = document.getElementById('poker-planning-ui');
+const unoUi = document.getElementById('uno-ui');
 const statusEl = document.getElementById('status');
 const blackjackStatusEl = document.getElementById('blackjack-status');
 
@@ -65,6 +67,25 @@ const gameViews = {
       planningPlayersEl: document.getElementById('planning-players'),
       planningCardRowEl: document.getElementById('planning-card-row'),
       revealAllBtn: document.getElementById('reveal-all-btn'),
+      getSocket: () => ws,
+      getMyId: () => myId
+    })
+  },
+  uno: {
+    container: unoUi,
+    display: 'block',
+    connectedMessage: 'Connected to UNO!',
+    client: createUnoClient({
+      unoStatusEl: document.getElementById('uno-status'),
+      unoTopCardEl: document.getElementById('uno-top-card'),
+      unoCurrentColorEl: document.getElementById('uno-current-color'),
+      unoDrawPileEl: document.getElementById('uno-draw-pile'),
+      unoPlayersEl: document.getElementById('uno-players'),
+      unoHandEl: document.getElementById('uno-hand'),
+      unoStartBtn: document.getElementById('uno-start-btn'),
+      unoDrawBtn: document.getElementById('uno-draw-btn'),
+      unoVictoryEl: document.getElementById('uno-victory'),
+      unoColorPickerEl: document.getElementById('uno-color-picker'),
       getSocket: () => ws,
       getMyId: () => myId
     })
@@ -152,6 +173,8 @@ function connectToCurrentGame() {
       gameViews.blackjack.client.render(msg);
     } else if (msg.type === 'poker_planning_state') {
       gameViews.pokerPlanning.client.render(msg);
+    } else if (msg.type === 'uno_state') {
+      gameViews.uno.client.render(msg);
     }
   };
 
