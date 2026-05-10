@@ -174,9 +174,13 @@ export function createUnoClient({
           ? 'Waiting for at least 2 players to start.'
           : 'Ready to start. Everyone in the lobby will be dealt in.';
       } else if (state.phase === 'playing') {
-        lastStatusText = isMyTurn
-          ? 'Your turn. Play a matching card or draw one.'
-          : 'Waiting for the current player to act.';
+        if (isMyTurn && state.hasDrawnPlayableCard) {
+          lastStatusText = 'You drew a playable card. Play that card to finish your turn.';
+        } else {
+          lastStatusText = isMyTurn
+            ? 'Your turn. Play a matching card or draw one if you have no playable cards.'
+            : 'Waiting for the current player to act.';
+        }
       } else if (state.phase === 'finished') {
         lastStatusText = `${state.winnerName || 'A player'} wins the round.`;
       }
@@ -193,7 +197,7 @@ export function createUnoClient({
         lastStartDisabled = startDisabled;
       }
 
-      const drawDisabled = !isMyTurn || state.phase !== 'playing';
+      const drawDisabled = !isMyTurn || state.phase !== 'playing' || !state.canDrawCard;
       if (lastDrawDisabled !== drawDisabled) {
         unoDrawBtn.disabled = drawDisabled;
         lastDrawDisabled = drawDisabled;

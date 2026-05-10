@@ -15,6 +15,7 @@ let drawPile = [];
 let discardPile = [];
 let currentColor = null;
 let winnerId = null;
+let drawnPlayableCardState = null; // { playerId, cardId }
 
 function shuffle(cards) {
   const deck = [...cards];
@@ -152,6 +153,7 @@ function resetLobbyState() {
   discardPile = [];
   currentColor = null;
   winnerId = null;
+  drawnPlayableCardState = null;
 
   players.forEach((player) => {
     player.hand = [];
@@ -168,9 +170,16 @@ function initPlayer(playerId, name, color) {
   });
 }
 
+function clearDrawnPlayableCardState() {
+  drawnPlayableCardState = null;
+}
+
 function removePlayer(playerId) {
   const currentPlayerId = getCurrentPlayerId();
   const removedCurrentPlayer = currentPlayerId === playerId;
+  if (drawnPlayableCardState?.playerId === playerId) {
+    clearDrawnPlayableCardState();
+  }
   players.delete(playerId);
   turnOrder = turnOrder.filter((id) => id !== playerId);
 
@@ -203,6 +212,21 @@ function canPlayOnTop(card, topCard) {
   if (card.color === currentColor) return true;
   if (topCard.type !== 'wild' && card.value === topCard.value) return true;
   return false;
+}
+
+function getPlayableCardIds(player) {
+  if (!player) return [];
+
+  const topCard = getTopCard();
+  const matchingCards = player.hand.filter((card) => canPlayOnTop(card, topCard));
+
+  if (drawnPlayableCardState && drawnPlayableCardState.playerId === getCurrentPlayerId()) {
+    return matchingCards
+      .filter((card) => card.id === drawnPlayableCardState.cardId)
+      .map((card) => card.id);
+  }
+
+  return matchingCards.map((card) => card.id);
 }
 
 function drawCardsForPlayer(playerId, count) {
@@ -298,6 +322,7 @@ function startGame() {
   phase = 'playing';
   direction = 1;
   winnerId = null;
+  clearDrawnPlayableCardState();
   drawPile = createDeck();
   discardPile = [];
   turnOrder = Array.from(players.keys());
@@ -333,13 +358,15 @@ function playCard(playerId, cardId, chosenColor) {
   if (cardIndex === -1) return false;
 
   const card = player.hand[cardIndex];
-  if (!canPlayOnTop(card, topCard)) return false;
+  const playableCardIds = new Set(getPlayableCardIds(player));
+  if (!playableCardIds.has(card.id) || !canPlayOnTop(card, topCard)) return false;
 
   if (card.type === 'wild' && !COLORS.includes(chosenColor)) return false;
 
   player.hand.splice(cardIndex, 1);
   discardPile.push(card);
   currentColor = card.type === 'wild' ? chosenColor : card.color;
+  clearDrawnPlayableCardState();
 
   if (ensureWinnerIfNeeded()) {
     return true;
@@ -355,11 +382,20 @@ function drawTurnCard(playerId) {
 
   const player = getPlayer(playerId);
   if (!player) return false;
+  if (drawnPlayableCardState?.playerId === playerId) return false;
+  if (getPlayableCardIds(player).length > 0) return false;
 
   const card = drawCard();
   if (!card) return false;
 
   player.hand.push(card);
+
+  if (canPlayOnTop(card, getTopCard())) {
+    drawnPlayableCardState = { playerId, cardId: card.id };
+    return true;
+  }
+
+  clearDrawnPlayableCardState();
   advanceTurn(1);
   return true;
 }
@@ -387,13 +423,23 @@ function updateGame() {
 function getStateForPlayer(playerId) {
   const baseState = updateGame();
   const me = getPlayer(playerId);
+  const playableCardIds = me ? getPlayableCardIds(me) : [];
 
   return {
     ...baseState,
     yourHand: me ? me.hand.map((card) => ({ ...card })) : [],
-    playableCardIds: me
-      ? me.hand.filter((card) => canPlayOnTop(card, getTopCard())).map((card) => card.id)
-      : [],
+    playableCardIds,
+    canDrawCard: Boolean(
+      me &&
+      phase === 'playing' &&
+      getCurrentPlayerId() === playerId &&
+      !drawnPlayableCardState &&
+      playableCardIds.length === 0
+    ),
+    hasDrawnPlayableCard: Boolean(
+      drawnPlayableCardState &&
+      drawnPlayableCardState.playerId === playerId
+    ),
     winnerName: winnerId && players.has(winnerId) ? players.get(winnerId).name : null,
   };
 }
