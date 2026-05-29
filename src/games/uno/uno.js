@@ -400,6 +400,15 @@ function drawTurnCard(playerId) {
   return true;
 }
 
+function passTurn(playerId) {
+  if (phase !== 'playing' || getCurrentPlayerId() !== playerId) return false;
+  if (!drawnPlayableCardState || drawnPlayableCardState.playerId !== playerId) return false;
+
+  clearDrawnPlayableCardState();
+  advanceTurn(1);
+  return true;
+}
+
 function updateGame() {
   return {
     type: 'uno_state',
@@ -436,6 +445,11 @@ function getStateForPlayer(playerId) {
       !drawnPlayableCardState &&
       playableCardIds.length === 0
     ),
+    canPassTurn: Boolean(
+      phase === 'playing' &&
+      drawnPlayableCardState &&
+      drawnPlayableCardState.playerId === playerId
+    ),
     hasDrawnPlayableCard: Boolean(
       drawnPlayableCardState &&
       drawnPlayableCardState.playerId === playerId
@@ -457,6 +471,10 @@ function handleGameAction(playerId, msg) {
 
   if (msg.action === 'drawCard') {
     drawTurnCard(playerId);
+  }
+
+  if (msg.action === 'passTurn') {
+    passTurn(playerId);
   }
 }
 

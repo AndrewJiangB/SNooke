@@ -23,6 +23,7 @@ export function createUnoClient({
   unoHandEl,
   unoStartBtn,
   unoDrawBtn,
+  unoPassBtn,
   unoVictoryEl,
   unoColorPickerEl,
   getSocket,
@@ -41,6 +42,8 @@ export function createUnoClient({
   let lastStartVisible = false;
   let lastStartDisabled = false;
   let lastDrawDisabled = false;
+  let lastPassVisible = false;
+  let lastPassDisabled = false;
 
   function setTextIfChanged(element, nextValue, previousValueRef) {
     if (previousValueRef.value === nextValue) return;
@@ -72,6 +75,8 @@ export function createUnoClient({
     lastStartVisible = false;
     lastStartDisabled = false;
     lastDrawDisabled = false;
+    lastPassVisible = false;
+    lastPassDisabled = false;
   }
 
   function sendAction(action, extra = {}) {
@@ -93,6 +98,12 @@ export function createUnoClient({
 
   unoDrawBtn.addEventListener('click', () => {
     sendAction('drawCard');
+  });
+
+  unoPassBtn.addEventListener('click', () => {
+    pendingWildCardId = null;
+    unoColorPickerEl.style.display = 'none';
+    sendAction('passTurn');
   });
 
   unoHandEl.addEventListener('click', (event) => {
@@ -147,6 +158,7 @@ export function createUnoClient({
       latestState = null;
       resetRenderCache();
       unoColorPickerEl.style.display = 'none';
+      unoPassBtn.style.display = 'none';
     },
 
     reset() {
@@ -162,6 +174,7 @@ export function createUnoClient({
       unoVictoryEl.style.display = 'none';
       unoVictoryEl.textContent = '';
       unoColorPickerEl.style.display = 'none';
+      unoPassBtn.style.display = 'none';
     },
 
     render(state) {
@@ -175,7 +188,7 @@ export function createUnoClient({
           : 'Ready to start. Everyone in the lobby will be dealt in.';
       } else if (state.phase === 'playing') {
         if (isMyTurn && state.hasDrawnPlayableCard) {
-          lastStatusText = 'You drew a playable card. Play that card to finish your turn.';
+          lastStatusText = 'You drew a playable card. Play it or pass your turn.';
         } else {
           lastStatusText = isMyTurn
             ? 'Your turn. Play a matching card or draw one if you have no playable cards.'
@@ -201,6 +214,16 @@ export function createUnoClient({
       if (lastDrawDisabled !== drawDisabled) {
         unoDrawBtn.disabled = drawDisabled;
         lastDrawDisabled = drawDisabled;
+      }
+
+      const passVisible = Boolean(state.canPassTurn);
+      setDisplayIfChanged(unoPassBtn, passVisible, 'inline-flex', { value: lastPassVisible });
+      lastPassVisible = passVisible;
+
+      const passDisabled = !passVisible;
+      if (lastPassDisabled !== passDisabled) {
+        unoPassBtn.disabled = passDisabled;
+        lastPassDisabled = passDisabled;
       }
 
       const victoryVisible = state.phase === 'finished';

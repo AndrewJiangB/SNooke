@@ -72,7 +72,7 @@
     .uno-hand-card.blue, .uno-card-face.blue { background: #2d6fc6; }
     .uno-hand-card.wild, .uno-card-face.wild { background: linear-gradient(135deg, #c43c35 0 25%, #c99b15 25% 50%, #2f8f49 50% 75%, #2d6fc6 75% 100%); }
     #uno-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-    #uno-start-btn, #uno-draw-btn { margin-right: 0; padding: 10px 16px; border: 1px solid #888; border-radius: 10px; background: #353535; color: #fff; cursor: pointer; }
+    #uno-start-btn, #uno-draw-btn, #uno-pass-btn { margin-right: 0; padding: 10px 16px; border: 1px solid #888; border-radius: 10px; background: #353535; color: #fff; cursor: pointer; }
     #uno-color-picker { display: none; flex-wrap: wrap; gap: 8px; }
     .uno-color-btn { margin-right: 0; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.25); border-radius: 999px; color: #fff; cursor: pointer; }
     .uno-color-btn[data-uno-color="red"] { background: #c43c35; }
@@ -201,6 +201,7 @@
           <div id="uno-controls">
             <button id="uno-start-btn">Start game</button>
             <button id="uno-draw-btn">Draw card</button>
+            <button id="uno-pass-btn" style="display: none;">Pass turn</button>
             <div id="uno-color-picker">
               <button class="uno-color-btn" data-uno-color="red">Red</button>
               <button class="uno-color-btn" data-uno-color="yellow">Yellow</button>

@@ -84,6 +84,7 @@ const gameViews = {
       unoHandEl: document.getElementById('uno-hand'),
       unoStartBtn: document.getElementById('uno-start-btn'),
       unoDrawBtn: document.getElementById('uno-draw-btn'),
+      unoPassBtn: document.getElementById('uno-pass-btn'),
       unoVictoryEl: document.getElementById('uno-victory'),
       unoColorPickerEl: document.getElementById('uno-color-picker'),
       getSocket: () => ws,
